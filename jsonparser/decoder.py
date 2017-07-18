@@ -44,20 +44,31 @@ class JSONDecoder(object):
         if self._ch != '{':
             raise AssertionError()
         self._next()
+        dic = {}
         if self._ch == '}':
             return {}  # handle empty object
-        key = self._parse_string()
-        self._parse_white_space()
-        print(self._ch, self._idx)
-        if self._ch not in ':,':
-            raise InvalidJSONStringFormatException()
-        self._next()  # to skip ':'
-        self._parse_white_space()
-        value = self._parse_value()
-        if self._ch != '}':
-            raise InvalidJSONStringFormatException()
-        self._next()
-        return {key: value}
+        while True:
+            self._parse_white_space()  # skip
+            key = self._parse_string()
+            self._parse_white_space()
+            # print(self._ch, self._idx)
+            if self._ch not in ':,':
+                raise InvalidJSONStringFormatException()
+            self._next()  # to skip ':'
+            self._parse_white_space()
+            value = self._parse_value()
+            self._parse_white_space()
+            # print(key, value)
+            dic[key] = value
+            if self._ch == '}':  # end of object
+                self._next()
+                break
+            elif self._ch == ',':
+                self._next()
+                continue
+            else:
+                raise InvalidJSONStringFormatException()
+        return dic
 
     def _next(self, step=1):
         """
@@ -78,7 +89,7 @@ class JSONDecoder(object):
         :return None if invalid string:
         :return s: Return a copy of the string with null removed
         """
-        if self._str.startswith('null'):
+        if self._get_remain().startswith('null'):
             self._next(4)  # move 4 steps
             return None
         else:
@@ -97,7 +108,7 @@ class JSONDecoder(object):
         self._next()
         li = []
         while self._has_next() and self._ch != ']':
-            print(self._ch)
+            #print(self._ch)
             if self._ch != ',':
                 li.append(self._parse_value())
                 if self._ch == ']':
@@ -204,5 +215,7 @@ if __name__ == "__main__":
     test_obj_2 = '{"abc" : "cba"}' # {u'abc' : u'cba'}
     test_obj_list = '{"abc" : [1,2,3,4,5]}' # {u'abc' : [1,2,3,4,5]}
     test_obj_obj = '{"abc" : {"cde" : [1,2,3,4]}}' # {u'abc' : [1,2,3,4,5]}
+    test_obj_3 = '{"abc" : {}' # {u'abc' : [1,2,3,4,5]}
+    test_constant = '{"abc" : {"cde" : {"null": null, "true": true, "false": false  }}}'
     parser = JSONDecoder()
-    print(parser.decode(test_obj_obj))
+    print(parser.decode(test_constant))

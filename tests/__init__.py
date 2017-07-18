@@ -17,7 +17,8 @@ class DecoderTest(unittest.TestCase):
     def test_empty_string(self):
         test_str = ''
         parser = JSONDecoder()
-        self.assertRaises(ValueError, parser.decode(test_str))
+        with self.assertRaises(ValueError):
+            parser.decode(test_str)
 
     def test_empty_obj(self):
         test_str = '{}'
@@ -29,10 +30,15 @@ class DecoderTest(unittest.TestCase):
         parser = JSONDecoder()
         self.assertDictEqual(json.loads(test_str), parser.decode(test_str))
 
+    def test_constant(self):
+        test_str = '{"abc" : {"cde" : {"null": null, "true": true, "false": false  }}}'
+        parser = JSONDecoder()
+        self.assertDictEqual(json.loads(test_str), parser.decode(test_str))
 
-def main():
-    decoder_test = DecoderTest()
-    runner = unittest.TextTestRunner()
-    runner.run(decoder_test)
+    def test_obj_list(self):
+        test_str = '{"abc" : {"cde" : [1,2,3,4]}}'
+        parser = JSONDecoder()
+        self.assertDictEqual(json.loads(test_str), parser.decode(test_str))
+
 if __name__ == '__main__':
-    main()
+    unittest.main()

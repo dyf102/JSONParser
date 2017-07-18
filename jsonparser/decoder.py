@@ -20,18 +20,7 @@ NUMBER_RE = re.compile(
 
 class InvalidJSONStringFormatException(Exception):
     def __str__(self):
-        return 'Invalid Input Exception'
-
-
-def _decode_uXXXX(s, pos):
-    esc = s[pos + 1:pos + 5]
-    if len(esc) == 4 and esc[1] not in 'xX':
-        try:
-            return int(esc, 16)
-        except ValueError:
-            pass
-    msg = "Invalid \\uXXXX escape"
-    raise ValueError()
+        return 'Invalid JSON string format Exception'
 
 
 class JSONDecoder(object):
@@ -43,27 +32,40 @@ class JSONDecoder(object):
 
     def decode(self, s):
         if not isinstance(s, str):
-            return None
+            raise TypeError('expected string')
+        if len(s) == 0:
+            raise ValueError('No JSON object could be decoded')
         self._idx = 0
         self._str = s
         self._ch = s[0]
-        return self.parse_obj()
+        return self._parse_obj()
 
-    def parse_obj(self):
+    def _parse_obj(self):
         if self._ch != '{':
             raise AssertionError()
         self._next()
+        if self._ch == '}':
+            return {}  # handle empty object
         key = self._parse_string()
-        if self._ch != ':':
+        self._parse_white_space()
+        print(self._ch, self._idx)
+        if self._ch not in ':,':
             raise InvalidJSONStringFormatException()
+        self._next()  # to skip ':'
+        self._parse_white_space()
         value = self._parse_value()
+        if self._ch != '}':
+            raise InvalidJSONStringFormatException()
+        self._next()
+        return {key: value}
 
     def _next(self, step=1):
         """
         Move to next position
         """
         self._idx += step
-        self._ch = self._str[self._idx]
+        if self._idx < len(self._str):
+            self._ch = self._str[self._idx]
 
     def _has_next(self):
         return self._idx <= len(self._str)
@@ -86,18 +88,25 @@ class JSONDecoder(object):
         """
         :return s: Return a copy of the string with escape characters removed
         """
-        while self._ch in _ESCAPE_LIST:
+        while self._ch in _ESCAPE_LIST and self._has_next():
             self._next()
 
     def _parse_list(self):
-        li = []
         if self._ch != '[':
             raise AssertionError()
+        self._next()
+        li = []
         while self._has_next() and self._ch != ']':
+            print(self._ch)
             if self._ch != ',':
                 li.append(self._parse_value())
-            self._next()
+                if self._ch == ']':
+                    break
+                self._next()
+            else:
+                raise InvalidJSONStringFormatException()
         if self._ch == ']':
+            self._next()
             return li
         else:
             raise InvalidJSONStringFormatException()
@@ -114,6 +123,7 @@ class JSONDecoder(object):
         while self._has_next():
             ch = self._ch
             if ch == '"':
+                self._next()
                 return u''.join(chunks)
             elif ch == '\\':  # TODO: add \u
                 self._next()
@@ -154,7 +164,7 @@ class JSONDecoder(object):
     def _parse_value(self):
         self._parse_white_space()
         if self._ch == '{':
-            return self.parse_obj()
+            return self._parse_obj()
         elif self._ch == '[':
             return self._parse_list()
         elif self._ch in ('f', 't'):
@@ -169,8 +179,18 @@ class JSONDecoder(object):
                 self._next(step)
                 return number
             else:
+                print(self._ch)
                 raise InvalidJSONStringFormatException()
-
+    def _decode_uXXXX(self):
+        pos = self._idx
+        esc = self._str[pos + 1:pos + 5]
+        if len(esc) == 4 and esc[1] not in 'xX':
+            try:
+                return int(esc, 16)
+            except ValueError:
+                pass
+        msg = "Invalid \\uXXXX escape"
+        raise ValueError()
 if __name__ == "__main__":
     test_string_1 = '"Altitude"'
     test_string_2 = '""'
@@ -180,6 +200,9 @@ if __name__ == "__main__":
     test_number_4 = '10e100' #10e100
     test_number_5 = '10e10000' #inf
     test_number_6 = '-10e10000' #-inf
-    test_obj_1 = '{}'
+    test_obj_1 = '{}' # {}
+    test_obj_2 = '{"abc" : "cba"}' # {u'abc' : u'cba'}
+    test_obj_list = '{"abc" : [1,2,3,4,5]}' # {u'abc' : [1,2,3,4,5]}
+    test_obj_obj = '{"abc" : {"cde" : [1,2,3,4]}}' # {u'abc' : [1,2,3,4,5]}
     parser = JSONDecoder()
-    print(parser.decode(test_obj_1))
+    print(parser.decode(test_obj_obj))

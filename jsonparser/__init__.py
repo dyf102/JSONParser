@@ -7,5 +7,3 @@ __all__ = [
 ]
 __author__ = 'Yuwei Duan<dyf102@gmail.com>'
 
-from .decoder import JSONDecoder
-from .encoder import JSONEncoder

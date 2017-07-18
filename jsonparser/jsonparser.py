@@ -1,8 +1,11 @@
+# vim: set et ts=4 sw=4
+# coding: utf8
+# !/usr/bin/python
 
 # STRING_SPLIT = re.compile(r'(.*?)(["\\\x00-\x1f])',
 #    (re.VERBOSE | re.MULTILINE | re.DOTALL))
-
-
+from .decoder import JSONDecoder
+from .encoder import JSONEncoder
 
 
 

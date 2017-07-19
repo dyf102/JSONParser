@@ -8,10 +8,10 @@ import unittest
 import sys
 sys.path.append('../')
 from jsonparser import decoder
-# from jsonparser import JSONEncoder
+from jsonparser import encoder
 
 JSONDecoder = decoder.JSONDecoder
-
+JSONEncoder = encoder.JSONEncoder
 class DecoderTest(unittest.TestCase):
 
     def test_empty_string(self):
@@ -40,5 +40,11 @@ class DecoderTest(unittest.TestCase):
         parser = JSONDecoder()
         self.assertDictEqual(json.loads(test_str), parser.decode(test_str))
 
+class EncoderTest(unittest.TestCase):
+
+    def test_null(self):
+        test_obj = None
+        encoder = JSONEncoder()
+        print(encoder.encode(test_obj)
 if __name__ == '__main__':
     unittest.main()

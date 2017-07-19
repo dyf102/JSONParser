@@ -108,7 +108,6 @@ class JSONDecoder(object):
         self._next()
         li = []
         while self._has_next() and self._ch != ']':
-            #print(self._ch)
             if self._ch != ',':
                 li.append(self._parse_value())
                 if self._ch == ']':
@@ -125,11 +124,9 @@ class JSONDecoder(object):
     def _parse_string(self):
         if self._ch != '"':
             raise InvalidJSONStringFormatException()
-        # print(self._get_remain(), self._idx)
         self._next()
         chunks = []
         _append = chunks.append
-        #_m = STRING_SPLIT.match
         # TODO: add Unicode support
         while self._has_next():
             ch = self._ch
@@ -192,7 +189,8 @@ class JSONDecoder(object):
             else:
                 print(self._ch)
                 raise InvalidJSONStringFormatException()
-    def _decode_uXXXX(self):
+
+    def _decode_unicode(self):
         pos = self._idx
         esc = self._str[pos + 1:pos + 5]
         if len(esc) == 4 and esc[1] not in 'xX':
@@ -205,17 +203,17 @@ class JSONDecoder(object):
 if __name__ == "__main__":
     test_string_1 = '"Altitude"'
     test_string_2 = '""'
-    test_number_1 = '123' #123
-    test_number_2 = '-123' #-123
-    test_number_3 = '3.1415' #3.1415
-    test_number_4 = '10e100' #10e100
-    test_number_5 = '10e10000' #inf
-    test_number_6 = '-10e10000' #-inf
-    test_obj_1 = '{}' # {}
-    test_obj_2 = '{"abc" : "cba"}' # {u'abc' : u'cba'}
-    test_obj_list = '{"abc" : [1,2,3,4,5]}' # {u'abc' : [1,2,3,4,5]}
-    test_obj_obj = '{"abc" : {"cde" : [1,2,3,4]}}' # {u'abc' : [1,2,3,4,5]}
-    test_obj_3 = '{"abc" : {}' # {u'abc' : [1,2,3,4,5]}
+    test_number_1 = '123'  # 123
+    test_number_2 = '-123'  # -123
+    test_number_3 = '3.1415'  # 3.1415
+    test_number_4 = '10e100'  # 10e100
+    test_number_5 = '10e10000'  # inf
+    test_number_6 = '-10e10000'  # -inf
+    test_obj_1 = '{}'  # {}
+    test_obj_2 = '{"abc" : "cba"}'  # {u'abc' : u'cba'}
+    test_obj_list = '{"abc" : [1,2,3,4,5]}'  # {u'abc' : [1,2,3,4,5]}
+    test_obj_obj = '{"abc" : {"cde" : [1,2,3,4]}}'  # {u'abc' : [1,2,3,4,5]}
+    test_obj_3 = '{"abc" : {}'  # {u'abc' : [1,2,3,4,5]}
     test_constant = '{"abc" : {"cde" : {"null": null, "true": true, "false": false  }}}'
     parser = JSONDecoder()
     print(parser.decode(test_constant))

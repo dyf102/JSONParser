@@ -89,9 +89,9 @@ class JSONEncoder(object):
         return ''.join(str_list)
 
     def _encode(self, obj):
-        ## test it type
+        # test it type
         t = type(obj)
-        ## Test it value
+        # Test it value
 
         if t is str:
             return self._encode_str(obj)

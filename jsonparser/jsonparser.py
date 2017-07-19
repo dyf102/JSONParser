@@ -82,6 +82,3 @@ class JSONParser(object):
         :return:
         """
         self._data.update(others)
-
-
-

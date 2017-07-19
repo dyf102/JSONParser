@@ -13,6 +13,7 @@ JSONDecoder = decoder.JSONDecoder
 JSONEncoder = encoder.JSONEncoder
 JSONParser = jsonparser.JSONParser
 
+
 class DecoderTest(unittest.TestCase):
 
     def test_empty_string(self):
@@ -27,7 +28,7 @@ class DecoderTest(unittest.TestCase):
         self.assertDictEqual(json.loads(test_str), parser.decode(test_str))
 
     def test_simple_obj(self):
-        test_str = '{"abc" : "cba"}' # {u'abc' : u'cba'}
+        test_str = '{"abc" : "cba"}'  # {u'abc' : u'cba'}
         parser = JSONDecoder()
         self.assertDictEqual(json.loads(test_str), parser.decode(test_str))
 
@@ -40,6 +41,7 @@ class DecoderTest(unittest.TestCase):
         test_str = '{"abc" : {"cde" : [1,2,3,4]}}'
         parser = JSONDecoder()
         self.assertDictEqual(json.loads(test_str), parser.decode(test_str))
+
 
 class EncoderTest(unittest.TestCase):
 
@@ -70,7 +72,7 @@ class EncoderTest(unittest.TestCase):
         self.assertEqual(encoder.encode(test_obj), json.dumps(test_obj))
 
     def test_nested_dict(self):
-        test_obj = {"outer": {"inner" : [{"x": 1.0, "y": 2.2}, {"x": 2.0, "y": 4.2}]}}
+        test_obj = {"outer": {"inner": [{"x": 1.0, "y": 2.2}, {"x": 2.0, "y": 4.2}]}}
         encoder = JSONEncoder()
         self.assertEqual(encoder.encode(test_obj), json.dumps(test_obj))
 
@@ -91,8 +93,7 @@ class TestJSONParser(unittest.TestCase):
 
     def tearDown(self):
         try:
-            pass
-            #os.remove('test.json')
+            os.remove('test.json')
         except OSError:
             pass
 

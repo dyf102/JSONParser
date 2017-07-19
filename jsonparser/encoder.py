@@ -12,16 +12,17 @@ ESCAPE_DCT = {
     '\t': '\\t',
 }
 CONST_DCT = {
-	True: 'true',
-	False: 'False',
-	None: 'null',
-	float('inf'): 'infinity',
-	float('-inf'): '-infinity'
+    True: 'true',
+    False: 'false',
+    None: 'null',
+    float('inf'): 'Infinity',
+    float('-inf'): '-Infinity'
 }
+
 
 class JSONEncoder(object):
     """
-	Extensible JSON <http://json.org> encoder for Python data structures.
+    Extensible JSON <http://json.org> encoder for Python data structures.
     Supports the following objects and types by default:
     +-------------------+---------------+
     | Python            | JSON          |
@@ -46,72 +47,74 @@ class JSONEncoder(object):
         self.str_list = []
 
     def _encode_str(self, str):
-    	return '\"' + str + '\"'
+        return '\"' + str + '\"'
 
     def _encode_dict(self, dict):
-    	str_list = ['{']
-    	_append = str_list.append
-    	is_first = True
-    	for k, v in dict.items():
-    		if not isinstance(k, str):
-    			raise KeyError('keys must be a string')
-    		if not is_first:
-    			_append(',')
-    		_append(self._encode_str(k))
-    		_append(':')
-    		_append(self.encode(v))
-    		is_first = False
-    	_append('}')
-    	print(str_list)
-    	return ''.join(str_list)
+        str_list = ['{']
+        _append = str_list.append
+        is_first = True
+        for k, v in dict.items():
+            if not isinstance(k, str):
+                raise KeyError('keys must be a string')
+            if not is_first:
+                _append(', ')
+            _append(self._encode_str(k))
+            _append(': ')
+            _append(self.encode(v))
+            is_first = False
+        _append('}')
+        # print(str_list)
+        return ''.join(str_list)
 
     def _encode_constant(self, c):
-    	try:
-    		c_str = CONST_DCT[c]
-    		return c_str
-    	except KeyError:
-    		raise AssertionError()
+        try:
+            c_str = CONST_DCT[c]
+            return c_str
+        except KeyError:
+            raise AssertionError()
     
     def _encode_int_float(self, num):
-    	return str(num)
+        return str(num)
     
     def _encode_list(self, items):
-    	str_list = ['[']
-    	_append = str_list.append()
-    	is_first = True
-    	for item in items:
-    		if not is_first:
-    			_append(',')
-    		_append(self.encode(item))
-    	_append(']')
-    	return ''.join(str_list)
-
-    def _encode_int_float(self, num):
-    	return str(num)
+        str_list = ['[']
+        _append = str_list.append
+        is_first = True
+        for item in items:
+            if not is_first:
+                _append(', ')
+            _append(self.encode(item))
+            is_first = False
+        _append(']')
+        return ''.join(str_list)
 
     def _encode(self, obj):
-    	t = type(obj)
+        ## test it type
+        t = type(obj)
+        ## Test it value
+
         if t is str:
-        	return self._encode_str(obj)
+            return self._encode_str(obj)
         elif t is dict:
-        	return self._encode_dict(obj)
+            return self._encode_dict(obj)
         elif t in (list, tuple):
-        	return self._encode_list(obj)
-        elif t in CONST_DCT.keys():
-        	return self._encode_constant(obj)
-        elif t in (int, float):
-        	return self._encode_int_float(obj)
+            return self._encode_list(obj)
+        elif t in (int, float) and obj not in (float('-inf'), float('inf')):
+            return self._encode_int_float(obj)
+        elif obj in CONST_DCT.keys() :
+            return self._encode_constant(obj)
         else:
-        	return str(obj)
+            return str(obj)
+
     def encode(self, obj):
         """
         :param dict:
         :return:
         """
         if obj is None:
-        	return 'null'
+            return 'null'
         return self._encode(obj)
 
 if __name__ == "__main__":
-	encoder = JSONEncoder()
-	print(encoder.encode({'123': 123}))
+    encoder = JSONEncoder()
+    print(encoder.encode({'123': 123}))

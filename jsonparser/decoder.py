@@ -137,6 +137,9 @@ class JSONDecoder(object):
                 self._next()
                 if self._ch in ESCAPE.keys():
                     _append(ESCAPE[self._ch])
+                elif self._ch == 'u':
+                    _append(unichr(self._decode_unicode()))
+                    self._next(4)
             else:
                 _append(ch)
             self._next()
@@ -215,5 +218,6 @@ if __name__ == "__main__":
     test_obj_obj = '{"abc" : {"cde" : [1,2,3,4]}}'  # {u'abc' : [1,2,3,4,5]}
     test_obj_3 = '{"abc" : {}'  # {u'abc' : [1,2,3,4,5]}
     test_constant = '{"abc" : {"cde" : {"null": null, "true": true, "false": false  }}}'
+    test_unicode = '{"\\u" : {}'  # {u'abc' : [1,2,3,4,5]}
     parser = JSONDecoder()
     print(parser.decode(test_constant))

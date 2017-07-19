@@ -1,6 +1,7 @@
 # vim: set et ts=4 sw=4
 # coding: utf8
 # !/usr/bin/python
+import re
 
 ESCAPE_DCT = {
     '\\': '\\\\',
@@ -18,7 +19,8 @@ CONST_DCT = {
     float('inf'): 'Infinity',
     float('-inf'): '-Infinity'
 }
-
+HAS_UTF8 = re.compile(r'[\x80-\xff]')
+ESCAPE_ASCII = re.compile(r'([\\"]|[^\ -~])')
 
 class JSONEncoder(object):
     """
@@ -92,9 +94,8 @@ class JSONEncoder(object):
         # test it type
         t = type(obj)
         # Test it value
-
-        if t is str:
-            return self._encode_str(obj)
+        if isinstance(obj, basestring):
+            return self._encode_basestring_ascii(obj)
         elif t is dict:
             return self._encode_dict(obj)
         elif t in (list, tuple):
@@ -114,7 +115,25 @@ class JSONEncoder(object):
         if obj is None:
             return 'null'
         return self._encode(obj)
-
+    def _encode_basestring_ascii(self, s):
+        """Return an ASCII-only JSON representation of a Python string
+        """
+        if isinstance(s, str) and HAS_UTF8.search(s) is not None:
+            s = s.decode('utf-8')
+        def replace(match):
+            s = match.group(0)
+            try:
+                return ESCAPE_DCT[s]
+            # not in escape list
+            except KeyError:
+                n = ord(s)
+                if n < 0x10000:  # TODO handle more than 32bit
+                    return '\\u{0:04x}'.format(n)
+                else:
+                    raise AssertionError()
+        # find Unicode and replace with ascii
+        return '"' + str(ESCAPE_ASCII.sub(replace, s)) + '"'
 if __name__ == "__main__":
     encoder = JSONEncoder()
-    print(encoder.encode({'123': 123}))
+    print(encoder.encode(u'\N{GREEK SMALL LETTER ALPHA}\N{GREEK CAPITAL LETTER OMEGA}').encode('utf-8'))
+    #print(encoder.py_encode_basestring_ascii(u'š'))

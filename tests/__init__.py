@@ -82,6 +82,11 @@ class EncoderTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             encoder.encode(test_obj)
 
+    def test_unicode(self):
+        test_obj = u = u'\N{GREEK SMALL LETTER ALPHA}\N{GREEK CAPITAL LETTER OMEGA}'
+        encoder = JSONEncoder()
+        self.assertEqual(encoder.encode(test_obj), '"\\u03b1\\u03a9"')
+
 
 class TestJSONParser(unittest.TestCase):
     def setUp(self):

@@ -2,6 +2,7 @@
 # coding: utf8
 # !/usr/bin/python
 import re
+import logging
 
 _ESCAPE_LIST = ['\n', '\t', '\r', ' ']
 ESCAPE = {
@@ -19,8 +20,11 @@ NUMBER_RE = re.compile(
 
 
 class InvalidJSONStringFormatException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
     def __str__(self):
-        return 'Invalid JSON string format Exception'
+        return 'Invalid JSON string format Exception: {}'.format(self.msg)
 
 
 class JSONDecoder(object):
@@ -38,6 +42,7 @@ class JSONDecoder(object):
         self._idx = 0
         self._str = s
         self._ch = s[0]
+        self._parse_white_space()
         return self._parse_obj()
 
     def _parse_obj(self):
@@ -49,16 +54,16 @@ class JSONDecoder(object):
             return {}  # handle empty object
         while True:
             self._parse_white_space()  # skip
+            if self._ch != '"':
+                raise InvalidJSONStringFormatException('Object Key must be a string')
             key = self._parse_string()
             self._parse_white_space()
-            # print(self._ch, self._idx)
-            if self._ch not in ':,':
-                raise InvalidJSONStringFormatException()
+            if self._ch not in ':':
+                raise InvalidJSONStringFormatException('Expect colon')
             self._next()  # to skip ':'
             self._parse_white_space()
             value = self._parse_value()
             self._parse_white_space()
-            # print(key, value)
             dic[key] = value
             if self._ch == '}':  # end of object
                 self._next()
@@ -67,16 +72,20 @@ class JSONDecoder(object):
                 self._next()
                 continue
             else:
-                raise InvalidJSONStringFormatException()
+                raise InvalidJSONStringFormatException('Expect commas')
         return dic
 
     def _next(self, step=1):
         """
         Move to next position
+        @:param step, default = 1
+        @:except InvalidJSONStringFormatException
         """
         self._idx += step
         if self._idx < len(self._str):
             self._ch = self._str[self._idx]
+        else:
+            raise InvalidJSONStringFormatException('Unexpected string')
 
     def _has_next(self):
         return self._idx <= len(self._str)
@@ -114,16 +123,16 @@ class JSONDecoder(object):
                     break
                 self._next()
             else:
-                raise InvalidJSONStringFormatException()
+                raise InvalidJSONStringFormatException('unknown delimiter {}'.format(self._ch))
         if self._ch == ']':
             self._next()
             return li
         else:
-            raise InvalidJSONStringFormatException()
+            raise InvalidJSONStringFormatException('expected {}'.format(']'))
 
     def _parse_string(self):
         if self._ch != '"':
-            raise InvalidJSONStringFormatException()
+            raise AssertionError()
         self._next()
         chunks = []
         _append = chunks.append
@@ -143,7 +152,7 @@ class JSONDecoder(object):
             else:
                 _append(ch)
             self._next()
-        raise InvalidJSONStringFormatException()
+        raise InvalidJSONStringFormatException('Missing closure \" ')
 
     def _parse_boolean(self):
         if self._get_remain().startswith('true'):
@@ -153,7 +162,7 @@ class JSONDecoder(object):
             self._next(5)
             return False
         else:
-            raise InvalidJSONStringFormatException()
+            raise InvalidJSONStringFormatException('Invalid constant')
 
     def _parse_number(self):
         number_match = NUMBER_RE.match
@@ -171,6 +180,8 @@ class JSONDecoder(object):
             return float('inf'), 8
         elif self._ch == '-' and self._get_remain().startswith('-Infinity'):
             return float('-inf'), 9
+        else:
+            raise InvalidJSONStringFormatException('Unexpected Token')
 
     def _parse_value(self):
         self._parse_white_space()
@@ -190,8 +201,8 @@ class JSONDecoder(object):
                 self._next(step)
                 return number
             else:
-                print(self._ch)
-                raise InvalidJSONStringFormatException()
+                msg = 'Exception Occurs at pos:{}'.format(self._idx)
+                raise InvalidJSONStringFormatException(msg)
 
     def _decode_unicode(self):
         pos = self._idx
@@ -202,22 +213,4 @@ class JSONDecoder(object):
             except ValueError:
                 pass
         msg = "Invalid \\uXXXX escape"
-        raise ValueError()
-if __name__ == "__main__":
-    test_string_1 = '"Altitude"'
-    test_string_2 = '""'
-    test_number_1 = '123'  # 123
-    test_number_2 = '-123'  # -123
-    test_number_3 = '3.1415'  # 3.1415
-    test_number_4 = '10e100'  # 10e100
-    test_number_5 = '10e10000'  # inf
-    test_number_6 = '-10e10000'  # -inf
-    test_obj_1 = '{}'  # {}
-    test_obj_2 = '{"abc" : "cba"}'  # {u'abc' : u'cba'}
-    test_obj_list = '{"abc" : [1,2,3,4,5]}'  # {u'abc' : [1,2,3,4,5]}
-    test_obj_obj = '{"abc" : {"cde" : [1,2,3,4]}}'  # {u'abc' : [1,2,3,4,5]}
-    test_obj_3 = '{"abc" : {}'  # {u'abc' : [1,2,3,4,5]}
-    test_constant = '{"abc" : {"cde" : {"null": null, "true": true, "false": false  }}}'
-    test_unicode = '{"\\u" : {}'  # {u'abc' : [1,2,3,4,5]}
-    parser = JSONDecoder()
-    print(parser.decode(test_constant))
+        raise ValueError(msg)

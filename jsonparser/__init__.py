@@ -6,12 +6,13 @@ __all__ = [
     'dumps', 'loads',
     'JSONDecoder', 'JSONEncoder',
     'dump_file', 'load_file',
-    'load_dict', 'dump_dict'
+    'load_dict', 'dump_dict',
+    'InvalidJSONStringFormatException'
 ]
 __author__ = 'Yuwei Duan<dyf102@gmail.com>'
 
 from .jsonparser import JSONParser
-
+from .decoder import InvalidJSONStringFormatException
 parser  = JSONParser()
 
 def loads(s):
@@ -20,10 +21,10 @@ def loads(s):
 def dumps():
     return parser.dumps()
 
-def dump_dict(input_dict):
-    return parser.dump_dict
+def dump_dict():
+    return parser.dump_dict()
 
-def load_dict(self, input_dict):
+def load_dict(input_dict):
     return parser.load_dict(input_dict)
 
 def dump_file(path):

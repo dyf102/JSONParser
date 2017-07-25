@@ -22,6 +22,7 @@ CONST_DCT = {
 HAS_UTF8 = re.compile(r'[\x80-\xff]')
 ESCAPE_ASCII = re.compile(r'([\\"]|[^\ -~])')
 
+
 class JSONEncoder(object):
     """
     Extensible JSON <http://json.org> encoder for Python data structures.
@@ -74,10 +75,10 @@ class JSONEncoder(object):
             return c_str
         except KeyError:
             raise AssertionError()
-    
+
     def _encode_int_float(self, num):
         return str(num)
-    
+
     def _encode_list(self, items):
         str_list = ['[']
         _append = str_list.append
@@ -102,7 +103,7 @@ class JSONEncoder(object):
             return self._encode_list(obj)
         elif t in (int, float) and obj not in (float('-inf'), float('inf')):
             return self._encode_int_float(obj)
-        elif obj in CONST_DCT.keys() :
+        elif obj in CONST_DCT.keys():
             return self._encode_constant(obj)
         else:
             return str(obj)
@@ -115,11 +116,13 @@ class JSONEncoder(object):
         if obj is None:
             return 'null'
         return self._encode(obj)
+
     def _encode_basestring_ascii(self, s):
         """Return an ASCII-only JSON representation of a Python string
         """
         if isinstance(s, str) and HAS_UTF8.search(s) is not None:
             s = s.decode('utf-8')
+
         def replace(match):
             s = match.group(0)
             try:
@@ -133,7 +136,7 @@ class JSONEncoder(object):
                     raise AssertionError()
         # find Unicode and replace with ascii
         return '"' + str(ESCAPE_ASCII.sub(replace, s)) + '"'
+
+
 if __name__ == "__main__":
     encoder = JSONEncoder()
-    print(encoder.encode(u'\N{GREEK SMALL LETTER ALPHA}\N{GREEK CAPITAL LETTER OMEGA}').encode('utf-8'))
-    #print(encoder.py_encode_basestring_ascii(u'š'))
